@@ -108,9 +108,7 @@ class _ColorPickerState extends State<ColorPicker> {
   }
 
   TextStyle leadingTextStyle(BuildContext context) {
-    final color = widget.showBackground
-        ? Contrast.textColor(widget.requested.tone)
-        : Theme.of(context).colorScheme.onSurface;
+    final color = Contrast.textColor(widget.requested.tone);
     return Theme.of(context).textTheme.bodyMedium!.copyWith(
           fontWeight: FontWeight.w700,
           fontFamily: 'monospace',
@@ -119,9 +117,7 @@ class _ColorPickerState extends State<ColorPicker> {
   }
 
   TextStyle entryTextStyle(BuildContext context) {
-    final color = widget.showBackground
-        ? Contrast.textColor(widget.requested.tone)
-        : Theme.of(context).colorScheme.onSurface;
+    final color = Contrast.textColor(widget.requested.tone);
     return Theme.of(context).textTheme.bodyMedium!.copyWith(
           fontWeight: FontWeight.w700,
           fontFamily: 'monospace',
@@ -160,22 +156,94 @@ class _ColorPickerState extends State<ColorPicker> {
           children: [
             buildButtons(context),
             if (widget.strict)
-              Center(
-                child: Text(
-                  Hct.from(_hueStrict, _chromaStrict, _toneStrict).toString(),
-                  style: entryTextStyle(context),
-                ),
+              Column(
+                children: [
+                  Center(
+                    child: Text(
+                      Hct.from(_hueStrict, _chromaStrict, _toneStrict).toString(),
+                      style: entryTextStyle(context),
+                    ),
+                  ),
+                  OutlinedButton.icon(
+                      onPressed: _showTldr,
+                      icon: Icon(Icons.help, color:Contrast.textColor(widget.requested.tone) ,),
+                      label:  Text('HCT?', style: entryTextStyle(context) )),
+                ],
               ),
             _hexEditor(context),
           ],
         ),
+        SizedBox(height: 32,),
+        Text('colors with contrast ratio 3.0: ${Contrast.constraintDescription(Contrast.darker(tone: _toneStrict, contrastRatio: 3.0), Contrast.lighter(tone: _toneStrict, contrastRatio: 3.0))}'),
+        Text('colors with contrast ratio 4.5: ${Contrast.constraintDescription(Contrast.darker(tone: _toneStrict, contrastRatio: 4.5), Contrast.lighter(tone: _toneStrict, contrastRatio: 4.5))}'),
+        Text('colors with contrast ratio 7.0: ${Contrast.constraintDescription(Contrast.darker(tone: _toneStrict, contrastRatio: 7.0), Contrast.lighter(tone: _toneStrict, contrastRatio: 7.0))}'),
+        OutlinedButton.icon(
+            onPressed: _showContrastTldr,
+            icon: Icon(Icons.help, color:Contrast.textColor(widget.requested.tone) ,),
+            label:  Text('How is that calculated?', style: entryTextStyle(context) )),
+
       ]),
     );
   }
 
+
+  Future<void> _showTldr() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('HCT'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                tldr(context),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Done'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  Future<void> _showContrastTldr() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // user must tap button!
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Contrast'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                contrastTldr(context),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Done'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget buildButtons(BuildContext context) {
-    final iconColor =
-        widget.showBackground ? Contrast.textColor(color.tone) : null;
+    final iconColor = Contrast.textColor(color.tone);
     const iconSize = 20.0;
     const buttonDimension = 28.0;
     return Row(
@@ -258,6 +326,88 @@ class _ColorPickerState extends State<ColorPicker> {
             ),
           ),
         ),
+      ],
+    );
+  }
+
+
+  Widget tldr(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          'TL;DR',
+          style: Theme.of(context).textTheme.headline6,
+        ),
+        Text('''
+    HCT, hue chroma tone, a color space that integrates contrast, enabling new frontiers in design.
+    H and C are CAM16's hue and chroma, T is L*a*b*'s luminance.
+    Not all HCTs have a corresponding RGB. HCT describes every possible color, RGB is limited to your display.
+    The HCT you requested is on the right, the HCT you received is on the bottom, above the help button.
+    When a requested HCT is impossible, chroma is reduced until it is possible. 
+    ''', style: Theme.of(context).textTheme.bodyText2),
+        Text(
+          'Why?',
+          style: Theme.of(context).textTheme.headline6,
+        ),
+        Text('''
+    - design benefits from a color system that integrates and guarantees contrast
+    - dynamic design requires such a color system
+    - contrast is currently measured in a ratio using relative luminance (Y in XYZ)
+    - relative luminance can be converted to a linear measure in perceptual luminance (L* in L*a*b*)
+    - L*a*b* is extremely old, design found it inconsistent in ex. chroma across hues
+    - by keying on maintaining luminance when gamut mapping, we can make any color system use L*
+    - CAM16 is the most modern & widely accepted color system
+    - HCT is CAM16 hue and chroma with L*a*b*'s L* lightness measure, gamut mapped to RGB by maintaining luminance
+    ''', style: Theme.of(context).textTheme.bodyText2),
+      ],
+    );
+  }
+
+
+  Widget contrastTldr(BuildContext context) {
+    return Column(
+      children: [
+        Text('''
+    FOUNDATION:
+    Luminance means lightness.
+    Contrast ratio is measured using relative luminance. (Y in the XYZ color space).
+    Y is a measure of photons, its scale of lightness doesn't match ours.
+    L* is a measure of perceptual luminance, its scale of lightness matches ours.
+    Y is trivially converted to L* in the L*a*b* color space.
+    For any given color, we can find its Y, then use the contrast ratio equation to find the Y of contrasting colors, then convert that to L*.
+    This lets us use contrast ratio as defined by WCAG, but have it be on an intuitive scale, a simple linear difference in L*.
+
+
+    SIMPLE RULE:
+    For any given L* in L*a*b*/T in HCT (i.e. luminance, from here, I'll say tone), the contrasting tones will be different.
+    However, for all tones:
+    - a tone delta of 38 guarantees a contrast ratio of 3.0.
+    - a tone delta of 50 guarantees a contrast ratio of 4.5.
+    "Tone delta of 40? 3.0. Tone delta of 50? 4.5." is often used to communicate this in a context that includes
+    software engineers or designers, because it avoids long discussions about luminance and dependency on the exact input.
+
+
+    EMPOWERS DESIGN AND A11Y:
+    This also lets us empower design and a11y engineering.
+    If colors are failing a contrast ratio test, one of them can have their L* changed to meet contrast.
+    This empowers design because its very clear how to alter a color, and it matches ones aesthetic sense: hue and chroma are retained.
+    This empowers a11y because its trivial to alter a color to meet user needs, in a way that design understands and respects.
+
+
+    BACKWARDS AND FORWARD COMPATIBLE, or, WHY IS CONTRAST ONLY LUMINANCE??
+    This is forward-compatible because there's no path to a contrast requirement not based in luminance.
+    For a practical example, APCA, a nextgen proposal for WCAG contrast, is also based on luminance.
+
+    Why does contrast only measure difference in luminance? We know colors also have hue and chroma.
+    However, its impossible to tell the exact set of hues and chromas the user might not be able to see. 
+    ~10% of the population is affected with a CVD, its unreasonable to have a contrast requirement that excludes them.
+ 
+    Additionally, even for those with no CVD, luminance matters. Colors with the same luminance create a shimmering effect. 
+    This is extremely well known in color science, to see it, try using two colors, one for background, one for text. 
+    Both colors should have the same tone. You'll find the colors 'shimmer' and reading text in those conditions is quite frustrating.
+    An example of this is yellow text (#ffff00) on a white (#ffffff) background.
+    ''', style: Theme.of(context).textTheme.bodyText2),
+
       ],
     );
   }
@@ -575,13 +725,13 @@ class RetroSliderTrackShape extends SliderTrackShape {
 
   List<Color> interpolateInHue() {
     return List.generate(
-        90,
+        360,
             (index) =>
-            Color(Hct.from(index.toDouble() * 4.0, chroma, tone).toInt()));
+            Color(Hct.from(index.toDouble(), chroma, tone).toInt()));
   }
 
   List<Color> interpolateInChroma() {
-    const resolution = 3.0;
+    const resolution = 1.0;
     return List.generate((130.0 / resolution).round(), (index) {
       final chroma = index * resolution;
       final hct = Hct.from(hue, chroma, tone);
@@ -590,7 +740,7 @@ class RetroSliderTrackShape extends SliderTrackShape {
   }
 
   List<Color> interpolateInLuminance() {
-    const resolution = 3.0;
+    const resolution = 1.0;
     return List.generate(
       (100.0 / resolution).round(),
           (index) => Color(

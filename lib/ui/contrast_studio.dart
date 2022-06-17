@@ -23,96 +23,100 @@ class _ContrastStudioState extends State<ContrastStudio> {
   var _contrastRatioGoal = 4.5;
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(
-          height: 8,
-        ),
-        const SizedBox(
-          height: 16,
-        ),
-        Text('Given', style: Theme.of(context).textTheme.headline6),
-        if (_apcaEnabled) settings(context),
-        if (!_apcaEnabled)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'contrast goal',
-                style: Theme.of(context).textTheme.caption,
-              ),
-              ...ContrastGoal.values.map(
-                    (e) => Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Radio(
-                        value: e.ratio,
-                        groupValue: _contrastRatioGoal,
-                        onChanged: (newValue) =>
-                            setState(() { if (newValue is double) { _contrastRatioGoal = newValue; }}),
+    return Expanded(
+      child: Center(
+        child: Column(
+          children: [
+            const SizedBox(
+              height: 8,
+            ),
+            const SizedBox(
+              height: 16,
+            ),
+            Text('Given', style: Theme.of(context).textTheme.headline6),
+            if (_apcaEnabled) settings(context),
+            if (!_apcaEnabled)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'contrast goal',
+                    style: Theme.of(context).textTheme.caption,
+                  ),
+                  ...ContrastGoal.values.map(
+                        (e) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Radio(
+                            value: e.ratio,
+                            groupValue: _contrastRatioGoal,
+                            onChanged: (newValue) =>
+                                setState(() { if (newValue is double) { _contrastRatioGoal = newValue; }}),
+                          ),
+                          Text(
+                            e.text,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.caption,
+                          ),
+                        ],
                       ),
-                      Text(
-                        e.text,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.caption,
+                    ),
+                  )
+                ],
+              ),
+            ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: _bgToneSetting(context)),
+            const SizedBox(
+              height: 16,
+            ),
+            const SizedBox(
+              height: 32,
+            ),
+            Text('Answer', style: Theme.of(context).textTheme.headline6),
+            results(context),
+            const Divider(),
+            const SizedBox(
+              height: 8,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Tooltip(
+                  message:
+                  'Enable UI for APCA, an exploration of a potential\nupdate to WCAG\'s contrast algorithm',
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'APCA?',
+                            style: Theme.of(context)
+                                .textTheme
+                                .subtitle1
+                                ?.copyWith(fontFamily: 'GoogleSansMono'),
+                          ),
+                          Switch(
+                              value: _apcaEnabled,
+                              onChanged: (newValue) =>
+                                  setState(() => _apcaEnabled = newValue))
+                        ],
                       ),
                     ],
                   ),
                 ),
-              )
-            ],
-          ),
-        ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: _bgToneSetting(context)),
-        const SizedBox(
-          height: 16,
-        ),
-        const SizedBox(
-          height: 32,
-        ),
-        Text('Answer', style: Theme.of(context).textTheme.headline6),
-        results(context),
-        const Divider(),
-        const SizedBox(
-          height: 8,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Tooltip(
-              message:
-              'Enable UI for APCA, an exploration of a potential\nupdate to WCAG\'s contrast algorithm',
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'APCA?',
-                        style: Theme.of(context)
-                            .textTheme
-                            .subtitle1
-                            ?.copyWith(fontFamily: 'GoogleSansMono'),
-                      ),
-                      Switch(
-                          value: _apcaEnabled,
-                          onChanged: (newValue) =>
-                              setState(() => _apcaEnabled = newValue))
-                    ],
-                  ),
-                ],
-              ),
+              ],
             ),
+            if (_apcaEnabled)
+              OutlinedButton.icon(
+                  onPressed: _showTldr,
+                  icon: const Icon(Icons.help),
+                  label: const Text('APCA TL;DR')),
           ],
         ),
-        if (_apcaEnabled)
-          OutlinedButton.icon(
-              onPressed: _showTldr,
-              icon: const Icon(Icons.help),
-              label: const Text('APCA TL;DR')),
-      ],
+      ),
     );
   }
 
@@ -428,7 +432,7 @@ class _ContrastStudioState extends State<ContrastStudio> {
   Widget _bgToneSetting(BuildContext context) {
     return Row(
       children: [
-        Text('contrast with T${_bgTone.round().toString().padRight(3)}',
+        Text('need contrast with T${_bgTone.round().toString().padRight(3)}',
             style: Theme.of(context).textTheme.caption),
         Flexible(
           child: Slider(
@@ -620,7 +624,7 @@ extension Helpers on ContrastGoal {
       case ContrastGoal.fourFive:
         return '4.5\n<40 dp/18 pt';
       case ContrastGoal.seven:
-        return '7.0\n<20/80 vision';
+        return '7.0\n≤20/80 vision';
     }
   }
 }

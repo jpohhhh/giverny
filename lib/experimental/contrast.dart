@@ -87,20 +87,20 @@ class Contrast {
 
   static String constraintDescription(double? darkerTone, double? lighterTone) {
     var string = '';
-    if (darkerTone != -1) {
-      if (darkerTone?.floor() == 0) {
-        string += 'T=${darkerTone?.floor()}';
+    if (darkerTone != -1 && darkerTone != null) {
+      if (darkerTone.floor() == 0) {
+        string += 'T=${darkerTone.floor()}';
       } else {
-        string += 'T≤${darkerTone?.ceil()}';
+        string += 'T≤${darkerTone.ceil()}';
       }
     }
-    if (lighterTone != -1) {
+    if (lighterTone != -1 && lighterTone != null) {
       if (string.isNotEmpty) {
         string += ' & T';
       } else {
         string += 'T';
       }
-      string += '≥${lighterTone?.ceil()}';
+      string += '≥${lighterTone.ceil()}';
     }
     if (string.isEmpty) {
       string = 'impossible';
